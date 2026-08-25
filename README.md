@@ -20,7 +20,7 @@ This is the recommended way to run the app locally. It packages the backend, the
 
 ```bash
 # 1. Clone the repository
-git clone <repository-url>
+git clone https://github.com/luiinge/resume-builder.git
 cd resume-builder
 
 # 2. Copy the example environment file (defaults work out of the box)
