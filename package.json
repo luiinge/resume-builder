@@ -1,0 +1,24 @@
+{
+  "name": "resume-builder",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Generador de currículums: CRUD de perfiles + CRUD de plantillas + renderizado a PDF/Word",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "npm run start:dev --workspace apps/backend",
+    "dev:frontend": "npm run dev --workspace apps/frontend",
+    "build": "npm run build --workspace packages/shared && npm run build --workspace apps/backend && npm run build --workspace apps/frontend",
+    "build:shared": "npm run build --workspace packages/shared",
+    "lint": "npm run lint --workspace apps/backend && npm run lint --workspace apps/frontend",
+    "test": "npm run test --workspace apps/backend",
+    "prisma:generate": "npm run prisma:generate --workspace apps/backend",
+    "prisma:migrate": "npm run prisma:migrate --workspace apps/backend",
+    "prisma:seed": "npm run prisma:seed --workspace apps/backend"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

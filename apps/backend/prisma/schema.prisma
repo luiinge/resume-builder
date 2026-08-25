@@ -1,0 +1,115 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Profile {
+  id       String @id @default(uuid())
+  name     String
+
+  fullName  String
+  title     String?
+  email     String
+  phone     String?
+  address   String?
+  birthDate DateTime?
+  photoUrl  String?
+  summary   String?
+  linkedin  String?
+  website   String?
+
+  skills         Skill[]
+  languages      Language[]
+  education      Education[]
+  workExperience WorkExperience[]
+  projects       Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id          String  @id @default(uuid())
+  name        String
+  level       Int?
+  description String?
+  order       Int     @default(0)
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId String
+
+  @@index([profileId])
+}
+
+model Language {
+  id        String  @id @default(uuid())
+  name      String
+  level     String?
+  order     Int     @default(0)
+  profile   Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId String
+
+  @@index([profileId])
+}
+
+model Education {
+  id           String    @id @default(uuid())
+  institution  String
+  degree       String
+  fieldOfStudy String?
+  startDate    DateTime?
+  endDate      DateTime?
+  description  String?
+  order        Int       @default(0)
+  profile      Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId    String
+
+  @@index([profileId])
+}
+
+model WorkExperience {
+  id          String    @id @default(uuid())
+  company     String
+  position    String
+  location    String?
+  startDate   DateTime?
+  endDate     DateTime?
+  description String?
+  order       Int       @default(0)
+  profile     Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String
+
+  @@index([profileId])
+}
+
+model Project {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  url           String?
+  startDate     DateTime?
+  endDate       DateTime?
+  technologies  String?
+  order         Int       @default(0)
+  profile       Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId     String
+
+  @@index([profileId])
+}
+
+model Template {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  thumbnailUrl String?
+  isPredefined Boolean  @default(false)
+  layoutConfig Json
+  css          String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
