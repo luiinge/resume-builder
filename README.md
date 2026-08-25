@@ -1,5 +1,8 @@
 # Resume Builder
 
+[![CI](https://github.com/luiinge/resume-builder/actions/workflows/ci.yml/badge.svg)](https://github.com/luiinge/resume-builder/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A self-hosted CV / resume generator. It has two parts:
 
 - **Profiles**: personal data plus skills, languages, education, work experience and project sections.

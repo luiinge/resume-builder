@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "description": "Generador de currículums: CRUD de perfiles + CRUD de plantillas + renderizado a PDF/Word",
+  "license": "MIT",
   "workspaces": [
     "apps/*",
     "packages/*"
