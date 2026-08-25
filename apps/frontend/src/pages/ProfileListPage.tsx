@@ -1,9 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { ProfileSummary } from '@resume-builder/shared';
-import { profilesApi } from '../api/profiles';
+import { profilesApi, toProfileImportPayload } from '../api/profiles';
 import { ApiError } from '../api/client';
 import { ErrorBanner } from '../components/ErrorBanner';
+import { downloadJson } from '../lib/downloadJson';
+
+function slugify(value: string): string {
+  return value.trim().replace(/[^\w.-]+/g, '-').replace(/-+/g, '-').toLowerCase() || 'profile';
+}
 
 export default function ProfileListPage() {
   const [profiles, setProfiles] = useState<ProfileSummary[] | null>(null);
@@ -12,6 +17,7 @@ export default function ProfileListPage() {
   const [name, setName] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
+  const importInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   function load() {
@@ -64,13 +70,49 @@ export default function ProfileListPage() {
     }
   }
 
+  async function handleExport(id: string) {
+    setError(null);
+    try {
+      const profile = await profilesApi.get(id);
+      downloadJson(`${slugify(profile.name)}.json`, toProfileImportPayload(profile));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to export the profile');
+    }
+  }
+
+  async function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setError(null);
+    try {
+      const parsed = JSON.parse(await file.text());
+      const created = await profilesApi.import(toProfileImportPayload(parsed));
+      navigate(`/profiles/${created.id}`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to import the profile. Make sure the file is a valid profile export.');
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
         <h2>Profiles</h2>
-        <button className="btn" onClick={() => setCreating((v) => !v)}>
-          {creating ? 'Cancel' : 'New profile'}
-        </button>
+        <div className="btn-row">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
+          <button className="btn secondary" onClick={() => importInputRef.current?.click()}>
+            Import
+          </button>
+          <button className="btn" onClick={() => setCreating((v) => !v)}>
+            {creating ? 'Cancel' : 'New profile'}
+          </button>
+        </div>
       </div>
 
       <ErrorBanner message={error} />
@@ -120,6 +162,9 @@ export default function ProfileListPage() {
                 </button>
                 <button className="btn secondary small" onClick={() => handleDuplicate(profile.id)}>
                   Duplicate
+                </button>
+                <button className="btn secondary small" onClick={() => handleExport(profile.id)}>
+                  Export
                 </button>
                 <button className="btn danger small" onClick={() => handleDelete(profile.id)}>
                   Delete

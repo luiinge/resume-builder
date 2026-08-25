@@ -1,13 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { TemplateSummary } from '@resume-builder/shared';
-import { templatesApi } from '../api/templates';
+import { templatesApi, toTemplateImportPayload } from '../api/templates';
 import { ApiError } from '../api/client';
 import { ErrorBanner } from '../components/ErrorBanner';
+import { downloadJson } from '../lib/downloadJson';
+
+function slugify(value: string): string {
+  return value.trim().replace(/[^\w.-]+/g, '-').replace(/-+/g, '-').toLowerCase() || 'template';
+}
 
 export default function TemplateListPage() {
   const [templates, setTemplates] = useState<TemplateSummary[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
   function load() {
@@ -49,13 +55,49 @@ export default function TemplateListPage() {
     }
   }
 
+  async function handleExport(id: string) {
+    setError(null);
+    try {
+      const template = await templatesApi.get(id);
+      downloadJson(`${slugify(template.name)}.json`, toTemplateImportPayload(template));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to export the template');
+    }
+  }
+
+  async function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setError(null);
+    try {
+      const parsed = JSON.parse(await file.text());
+      const created = await templatesApi.create(toTemplateImportPayload(parsed));
+      navigate(`/templates/${created.id}`);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Failed to import the template. Make sure the file is a valid template export.');
+    }
+  }
+
   return (
     <div>
       <div className="page-header">
         <h2>Templates</h2>
-        <Link className="btn" to="/templates/new">
-          New template
-        </Link>
+        <div className="btn-row">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="application/json"
+            style={{ display: 'none' }}
+            onChange={handleImportFile}
+          />
+          <button className="btn secondary" onClick={() => importInputRef.current?.click()}>
+            Import
+          </button>
+          <Link className="btn" to="/templates/new">
+            New template
+          </Link>
+        </div>
       </div>
 
       <ErrorBanner message={error} />
@@ -81,6 +123,9 @@ export default function TemplateListPage() {
                 </button>
                 <button className="btn secondary small" onClick={() => handleDuplicate(template.id)}>
                   Duplicate
+                </button>
+                <button className="btn secondary small" onClick={() => handleExport(template.id)}>
+                  Export
                 </button>
                 <button className="btn danger small" disabled={template.isPredefined} onClick={() => handleDelete(template.id)}>
                   Delete

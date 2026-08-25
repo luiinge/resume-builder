@@ -86,7 +86,7 @@ export class TemplatesService {
     const source = await this.findOrThrow(id);
     const copy = await this.prisma.template.create({
       data: {
-        name: `${source.name} (copia)`,
+        name: `${source.name} (copy)`,
         description: source.description,
         thumbnailUrl: source.thumbnailUrl,
         layoutConfig: source.layoutConfig as object,

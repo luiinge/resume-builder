@@ -20,6 +20,7 @@ import {
 } from './dto/work-experience.dto';
 import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
 import { ReorderDto } from './dto/reorder.dto';
+import { ImportProfileDto } from './dto/import-profile.dto';
 
 @ApiTags('profiles')
 @Controller('profiles')
@@ -29,6 +30,11 @@ export class ProfilesController {
   @Post()
   create(@Body() dto: CreateProfileDto) {
     return this.profilesService.create(dto);
+  }
+
+  @Post('import')
+  importProfile(@Body() dto: ImportProfileDto) {
+    return this.profilesService.importProfile(dto);
   }
 
   @Get()

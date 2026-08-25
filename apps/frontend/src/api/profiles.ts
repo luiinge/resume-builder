@@ -10,6 +10,60 @@ import type {
 } from '@resume-builder/shared';
 import { api } from './client';
 
+export interface ProfileImportPayload {
+  name: string;
+  personalData: PersonalData;
+  skills?: Array<{ name: string; level?: number; description?: string }>;
+  languages?: Array<{ name: string; level?: string }>;
+  education?: Array<Omit<Education, 'id' | 'order'>>;
+  workExperience?: Array<Omit<WorkExperience, 'id' | 'order'>>;
+  projects?: Array<Omit<Project, 'id' | 'order'>>;
+}
+
+/** Deja un perfil (o un JSON previamente exportado con esta misma forma)
+ * listo para exportar/importar: sin `id`/`order`, que el backend no acepta
+ * en la creación y que de todos modos se regeneran al importar. */
+export function toProfileImportPayload(profile: {
+  name: string;
+  personalData: PersonalData;
+  skills?: Skill[];
+  languages?: Language[];
+  education?: Education[];
+  workExperience?: WorkExperience[];
+  projects?: Project[];
+}): ProfileImportPayload {
+  return {
+    name: profile.name,
+    personalData: profile.personalData,
+    skills: (profile.skills ?? []).map(({ name, level, description }) => ({ name, level, description })),
+    languages: (profile.languages ?? []).map(({ name, level }) => ({ name, level })),
+    education: (profile.education ?? []).map(({ institution, degree, fieldOfStudy, startDate, endDate, description }) => ({
+      institution,
+      degree,
+      fieldOfStudy,
+      startDate,
+      endDate,
+      description,
+    })),
+    workExperience: (profile.workExperience ?? []).map(({ company, position, location, startDate, endDate, description }) => ({
+      company,
+      position,
+      location,
+      startDate,
+      endDate,
+      description,
+    })),
+    projects: (profile.projects ?? []).map(({ name, description, url, startDate, endDate, technologies }) => ({
+      name,
+      description,
+      url,
+      startDate,
+      endDate,
+      technologies,
+    })),
+  };
+}
+
 export const profilesApi = {
   list: () => api.get<ProfileSummary[]>('/profiles'),
   get: (id: string) => api.get<Profile>(`/profiles/${id}`),
@@ -18,6 +72,7 @@ export const profilesApi = {
     api.patch<Profile>(`/profiles/${id}`, changes),
   remove: (id: string) => api.delete<void>(`/profiles/${id}`),
   duplicate: (id: string) => api.post<Profile>(`/profiles/${id}/duplicate`),
+  import: (data: ProfileImportPayload) => api.post<Profile>('/profiles/import', data),
 
   addSkill: (profileId: string, data: { name: string; level?: number; description?: string }) =>
     api.post<Skill>(`/profiles/${profileId}/skills`, data),

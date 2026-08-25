@@ -9,6 +9,24 @@ export interface TemplateInput {
   css: string;
 }
 
+/** Deja una plantilla (o un JSON previamente exportado con esta misma forma)
+ * lista para exportar/importar: sin `id`/`isPredefined`/timestamps. */
+export function toTemplateImportPayload(template: {
+  name: string;
+  description?: string;
+  thumbnailUrl?: string;
+  layoutConfig: TemplateLayoutConfig;
+  css: string;
+}): TemplateInput {
+  return {
+    name: template.name,
+    description: template.description,
+    thumbnailUrl: template.thumbnailUrl,
+    layoutConfig: template.layoutConfig,
+    css: template.css,
+  };
+}
+
 export const templatesApi = {
   list: () => api.get<TemplateSummary[]>('/templates'),
   get: (id: string) => api.get<Template>(`/templates/${id}`),

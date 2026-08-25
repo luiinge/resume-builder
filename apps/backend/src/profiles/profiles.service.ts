@@ -11,6 +11,7 @@ import {
   UpdateWorkExperienceDto,
 } from './dto/work-experience.dto';
 import { CreateProjectDto, UpdateProjectDto } from './dto/project.dto';
+import { ImportProfileDto } from './dto/import-profile.dto';
 
 const PROFILE_INCLUDE = {
   skills: true,
@@ -127,7 +128,7 @@ export class ProfilesService {
 
     const copy = await this.prisma.profile.create({
       data: {
-        name: `${source.name} (copia)`,
+        name: `${source.name} (copy)`,
         fullName: source.fullName,
         title: source.title,
         email: source.email,
@@ -220,6 +221,74 @@ export class ProfilesService {
       include: PROFILE_INCLUDE,
     });
     return toProfileDto(copy);
+  }
+
+  async importProfile(dto: ImportProfileDto) {
+    const { personalData } = dto;
+    const profile = await this.prisma.profile.create({
+      data: {
+        name: dto.name,
+        fullName: personalData.fullName,
+        title: personalData.title,
+        email: personalData.email,
+        phone: personalData.phone,
+        address: personalData.address,
+        birthDate: personalData.birthDate
+          ? new Date(personalData.birthDate)
+          : null,
+        photoUrl: personalData.photoUrl,
+        summary: personalData.summary,
+        linkedin: personalData.linkedin,
+        website: personalData.website,
+        skills: {
+          create: (dto.skills ?? []).map((skill, order) => ({
+            ...skill,
+            order,
+          })),
+        },
+        languages: {
+          create: (dto.languages ?? []).map((language, order) => ({
+            ...language,
+            order,
+          })),
+        },
+        education: {
+          create: (dto.education ?? []).map((entry, order) => ({
+            institution: entry.institution,
+            degree: entry.degree,
+            fieldOfStudy: entry.fieldOfStudy,
+            startDate: entry.startDate ? new Date(entry.startDate) : null,
+            endDate: entry.endDate ? new Date(entry.endDate) : null,
+            description: entry.description,
+            order,
+          })),
+        },
+        workExperience: {
+          create: (dto.workExperience ?? []).map((entry, order) => ({
+            company: entry.company,
+            position: entry.position,
+            location: entry.location,
+            startDate: entry.startDate ? new Date(entry.startDate) : null,
+            endDate: entry.endDate ? new Date(entry.endDate) : null,
+            description: entry.description,
+            order,
+          })),
+        },
+        projects: {
+          create: (dto.projects ?? []).map((entry, order) => ({
+            name: entry.name,
+            description: entry.description,
+            url: entry.url,
+            startDate: entry.startDate ? new Date(entry.startDate) : null,
+            endDate: entry.endDate ? new Date(entry.endDate) : null,
+            technologies: entry.technologies,
+            order,
+          })),
+        },
+      },
+      include: PROFILE_INCLUDE,
+    });
+    return toProfileDto(profile);
   }
 
   private async assertProfileExists(id: string) {
